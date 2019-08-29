@@ -16,6 +16,8 @@ type Options struct {
 	ChannelNameFunc func(*http.Request) string
 	// All usage logs end up in Logger
 	Logger *log.Logger
+	// Heartbeats
+	HeartbeatInterval int
 }
 
 func (opt *Options) hasHeaders() bool {

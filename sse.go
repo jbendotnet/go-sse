@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"sync"
+	"time"
 )
 
 // Server represents a server sent events server.
@@ -18,6 +19,7 @@ type Server struct {
 	removeClient chan *Client
 	shutdown     chan bool
 	closeChannel chan string
+	heartbeatChannel chan bool
 }
 
 // NewServer creates a new SSE server.
@@ -40,11 +42,27 @@ func NewServer(options *Options) *Server {
 		make(chan *Client),
 		make(chan bool),
 		make(chan string),
+		make(chan bool),
 	}
 
 	go s.dispatch()
 
+	// Heartbeats?
+	if options.HeartbeatInterval > 0 {
+		go s.heartbeats(options.HeartbeatInterval)
+	}
+
 	return s
+}
+
+func (s *Server) heartbeats(sleep int) {
+	secs := time.Second * time.Duration(sleep)
+	for {
+		select {
+		case <-time.After(secs):
+			s.heartbeatChannel <- true
+		}
+	}
 }
 
 func (s *Server) ServeHTTP(response http.ResponseWriter, request *http.Request) {
@@ -249,11 +267,19 @@ func (s *Server) dispatch() {
 				s.options.Logger.Printf("requested to close nonexistent channel '%s'.", channel)
 			}
 
+		// Heartbeats
+		case <-s.heartbeatChannel:
+			msg := " \n "
+			for _, ch := range s.Channels() {
+				s.SendMessage(ch, SimpleMessage(msg))
+			}
+
 		// Event Source shutdown.
 		case <-s.shutdown:
 			s.close()
 			close(s.addClient)
 			close(s.removeClient)
+			close(s.heartbeatChannel)
 			close(s.closeChannel)
 			close(s.shutdown)
 
