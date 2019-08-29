@@ -269,9 +269,8 @@ func (s *Server) dispatch() {
 
 		// Heartbeats
 		case <-s.heartbeatChannel:
-			msg := " \n "
 			for _, ch := range s.Channels() {
-				s.SendMessage(ch, SimpleMessage(msg))
+				s.SendMessage(ch, HeartbeatMessage())
 			}
 
 		// Event Source shutdown.

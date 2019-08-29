@@ -14,6 +14,11 @@ type Message struct {
 	retry int
 }
 
+func HeartbeatMessage() *Message {
+	const data = " \n "
+	return SimpleMessage(data)
+}
+
 func SimpleMessage(data string) *Message {
 	return NewMessage("", data, "")
 }
