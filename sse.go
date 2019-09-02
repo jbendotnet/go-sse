@@ -82,7 +82,7 @@ func (s *Server) ServeHTTP(response http.ResponseWriter, request *http.Request) 
 	}
 
 	if request.Method == "GET" {
-		h.Set("Content-Type", "text/event-stream")
+		h.Set("Content-Type", "text/event-stream; charset=utf-8")
 		h.Set("Cache-Control", "no-cache")
 		h.Set("Connection", "keep-alive")
 
